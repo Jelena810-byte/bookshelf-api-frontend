@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import BookCard from "./BookCard";
+import "../styles/Home.css";
+
 
 function Home({ user }) {
   const [recommendedBooks, setRecommendedBooks] = useState([]);
