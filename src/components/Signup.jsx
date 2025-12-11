@@ -1,42 +1,56 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { signUp } from "../services/users.js";
 
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-}
 function Signup() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // const [username, setUsername] = useState('');
+  // const [email, setEmail] = useState('');
+  // const [password, setPassword] = useState('');
+  // const [password_confirmation, setPasswordConfirmation] = useState('');
   const [err, setErr] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErr('');
+  const [form, setForm] = useState({
+    username: "",
+    email: "",
+    password: "",
+    password_confirmation: "",
+    isError: false,
+    errorMsg: "",
+  });
 
-    await fetch('/', { credentials: 'include' });
-    const csrftoken = getCookie('csrftoken');
+  const handleChange = (e) => {
+    const { name, value } = e.target;
 
-    const res = await fetch('/api/signup/', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': csrftoken
-      },
-      body: JSON.stringify({ username, email, password })
-    });
+    setForm((prevForm) => ({
+      ...prevForm,
+      [name]: value,
+    }));
+  };
 
-    if (res.ok) {
-      navigate('/login');
-    } else {
-      const text = await res.text();
-      setErr(`Signup failed: ${text}`);
+
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    try {
+      const userData = await signUp(form);
+      setUser(userData);
+
+      navigate("/books");
+    } catch (error) {
+      console.error(error);
+      setForm((prevForm) => ({
+        isError: true,
+        errorMsg: "Invalid Credentials",
+        username: prevForm.username,
+        email: "",
+        password: "",
+      }));
     }
   };
+
+
 
   return (
     <div className="card">
@@ -45,19 +59,57 @@ function Signup() {
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Username</label>
-          <input value={username} onChange={e=>setUsername(e.target.value)} />
+          <input
+            type='text'
+            name='username'
+            value={form.username}
+            placeholder='Enter Username'
+            onChange={handleChange}
+            required
+            autoComplete="off"
+          />
         </div>
         <div className="form-group">
           <label>Email</label>
-          <input value={email} onChange={e=>setEmail(e.target.value)} />
+          <input 
+            type='email'
+            name='email'
+            value={form.email}
+            placeholder='Enter email'
+            onChange={handleChange}
+            required
+            autoComplete="off"
+         />
         </div>
         <div className="form-group">
           <label>Password</label>
-          <input value={password} onChange={e=>setPassword(e.target.value)} type="password" />
-        </div>
-        <button className="btn btn-primary" type="submit">Sign up</button>
+          <input 
+            type='password'
+            name='password'
+            value={form.password}
+            placeholder='Enter Password'
+            onChange={handleChange}
+            required
+            autoComplete="off"
+             />
+          </div>
+          <div>
+          <label>Password confirmation</label>
+          <input 
+            type='password'
+            name='password_confirmation'
+            value={form.password_confirmation}
+            placeholder='Re-type the password'
+            onChange={handleChange}
+            required
+            autoComplete="off"/>
+          </div>
+        <button onClick={() => navigate('/login')} className="btn btn-primary" type="submit">Sign up</button>
       </form>
     </div>
   );
 }
 export default Signup; 
+
+
+

@@ -1,65 +1,122 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { signIn } from "../services/users.js";
 
-
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-}
 
 function Login({ setUser }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [err, setErr] = useState('');
+  // const [username, setUsername] = useState('');
+  // const [password, setPassword] = useState('');
+  // const [err, setErr] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErr('');
+  const [form, setForm] = useState({
+    username: "",
+    password: "",
+    isError: false,
+    errorMsg: "",
+  });
 
-    // ensure CSRF cookie exists by fetching the root (or any GET) first
-    await fetch('/', { credentials: 'include' });
+   const handleChange = (e) => {
+    const { name, value } = e.target;
 
-    const csrftoken = getCookie('csrftoken');
+    setForm((prevForm) => ({
+      ...prevForm,
+      [name]: value,
+    }));
+  };
 
-    const form = new URLSearchParams();
-    form.append('username', username);
-    form.append('password', password);
+ 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
-    const res = await fetch('/api-auth/login/', {
-      method: 'POST',
-      body: form,
-      credentials: 'include',
-      headers: {
-        'X-CSRFToken': csrftoken
-      }
-    });
+    try {
+      const userData = await signIn(form);
+      setUser(userData);
 
-    if (res.ok) {
-      setUser(username);
-      navigate('/books');
-    } else {
-      setErr('Login failed. Check your username and password.');
+      navigate("/books");
+    } catch (error) {
+      console.error(error);
+      setForm((prevForm) => ({
+        isError: true,
+        errorMsg: "Invalid Credentials",
+        username: prevForm.username,
+        password: "",
+      }));
     }
   };
+
+  const renderError = () => {
+    const toggleForm = form.isError ? "danger" : "";
+
+  };
+
+
+
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setErr('');
+
+  //   // ensure CSRF cookie exists by fetching the root (or any GET) first
+  //   await fetch('/', { credentials: 'include' });
+
+    
+
+  //   const form = new URLSearchParams();
+  //   form.append('username', username);
+  //   form.append('password', password);
+
+  //   const res = await fetch('/api-auth/login/', {
+  //     method: 'POST',
+  //     body: form,
+  //     credentials: 'include',
+  //     headers: {
+  //       'X-CSRFToken': csrftoken
+  //     }
+  //   });
+
+  //   if (res.ok) {
+  //     setUser(username);
+  //     navigate('/books');
+  //   } else {
+  //     setErr('Login failed. Check your username and password.');
+  //   }
+  // };
 
   return (
     <div className="card">
       <h2>Sign In</h2>
-      {err && <div style={{color:'red'}}>{err}</div>}
+      {/* {err && <div style={{color:'red'}}>{err}</div>} */}
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Username</label>
-          <input value={username} onChange={e=>setUsername(e.target.value)} />
+          <input
+            type='text'
+            name='username'
+            value={form.username}
+            placeholder='Enter Username'
+            onChange={handleChange}
+            required
+            autoComplete="off"
+          />
         </div>
         <div className="form-group">
           <label>Password</label>
-          <input value={password} onChange={e=>setPassword(e.target.value)} type="password" />
+          <input
+            type='password'
+            name='password'
+            value={form.password}
+            placeholder='Enter Password'
+            onChange={handleChange}
+            required
+            autoComplete="off"
+          />
         </div>
+        {renderError()}
         <button className="btn btn-primary" type="submit">Sign in</button>
       </form>
     </div>
   );
 }
 export default Login;
+

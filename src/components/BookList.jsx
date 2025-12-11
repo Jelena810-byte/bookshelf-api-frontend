@@ -1,52 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import {getBooks, deleteBook} from '../services/books';
 
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-}
 
-function BookList({ user }) {
+function BookList() {
   const [books, setBooks] = useState([]);
   const [err, setErr] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    fetchBooks();
-    // eslint-disable-next-line
-  }, [user]);
 
-  const fetchBooks = async () => {
-    const res = await fetch('/api/', { credentials: 'include' });
-    if (res.status === 200) {
-      const data = await res.json();
-      setBooks(data);
-    } else if (res.status === 403 || res.status === 401) {
-      navigate('/login');
-    } else {
-      setErr('Failed to load books');
+  useEffect(() => {
+    const fetchBooks = async () => {
+      const booksData = await getBooks()
+      setBooks(booksData)
     }
-  };
+
+    fetchBooks()
+  }, [])
+
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this book?')) return;
-    const csrftoken = getCookie('csrftoken');
-    const res = await fetch(`/api/${id}/`, {
-      method: 'DELETE',
-      credentials: 'include',
-      headers: { 'X-CSRFToken': csrftoken }
-    });
-    if (res.status === 204) {
-      setBooks(books.filter(b => b.id !== id));
-    } else {
-      setErr('Delete failed');
-    }
+    // if (!window.confirm('Delete this book?')) return;
+    // // const csrftoken = getCookie('csrftoken');
+    // const res = await fetch(`/api/${id}/`, {
+    //   method: 'DELETE',
+    //   credentials: 'include',
+    //   headers: { 'X-CSRFToken': csrftoken }
+    // });
+    // if (res.status === 204) {
+    //   setBooks(books.filter(b => b.id !== id));
+    // } else {
+    //   setErr('Delete failed');
+    // }
+    await deleteBook(id)
   };
+
 
   return (
     <div>
@@ -55,7 +43,7 @@ function BookList({ user }) {
         <Link to="/books/new" className="btn btn-primary" style={{marginBottom:10}}>Add Book</Link>
         {err && <div style={{color:'red'}}>{err}</div>}
         <div className="book-grid">
-          {books.map(book => (
+          {books.length && books.map(book => (
             <div className="book-card" key={book.id}>
               <strong>{book.title}</strong>
               <div style={{fontSize:12}}>{book.author}</div>

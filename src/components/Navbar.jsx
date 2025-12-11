@@ -74,7 +74,7 @@ function Navbar({ user, setUser }) {
           </>
         ) : (
           <>
-            <span className="navbar-user">Hi, {user}</span>
+            <span className="navbar-user">Hi, {user.username}</span>
             <button className="btn logout-btn" onClick={handleLogout}>
               Logout
             </button>
